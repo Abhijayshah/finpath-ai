@@ -2,6 +2,14 @@
 ### Your Personal ET Finance Concierge 
 **ET AI Hackathon 2026 | Problem Statement 7 — AI Concierge for ET** 
  
+## ✅ Submission Requirements
+- Public GitHub repo: `https://github.com/YOUR_USERNAME/finpath-ai` (replace with your final repo URL)
+- README (this file): setup + architecture + deployment
+- 3-minute pitch video script: [PITCH_VIDEO_SCRIPT.md](file:///Volumes/VideoAPFS/projects-ssd/finpath-ai/PITCH_VIDEO_SCRIPT.md)
+- Architecture document: [ARCHITECTURE.md](file:///Volumes/VideoAPFS/projects-ssd/finpath-ai/ARCHITECTURE.md)
+- Developer deep-dive: [details-for-developer.md](file:///Volumes/VideoAPFS/projects-ssd/finpath-ai/details-for-developer.md)
+- Impact model: [IMPACT_MODEL.md](file:///Volumes/VideoAPFS/projects-ssd/finpath-ai/IMPACT_MODEL.md)
+
 ## 🎯 Problem 
 ET has a massive ecosystem — ET Prime, ET Markets, masterclasses, wealth summits, 
 and financial services partnerships. But most users discover only 10% of what ET offers. 
@@ -40,16 +48,16 @@ Groq API   MongoDB Atlas
 ## 🛠️ Tech Stack 
 | Layer | Technology | 
 |---|---| 
-| Frontend | React 18 + TypeScript + Vite | 
+| Frontend | React + TypeScript + Vite | 
 | Styling | Tailwind CSS | 
 | Backend | Node.js + Express + TypeScript | 
 | Database | MongoDB Atlas + Mongoose | 
 | AI Engine | Groq API — Llama 3.3 70B | 
-| Routing | React Router DOM v6 | 
+| Routing | React Router DOM | 
  
 ## 🚀 Quick Start 
 ```bash 
-git clone `https://github.com/YOUR_USERNAME/finpath-ai.git` 
+git clone https://github.com/YOUR_USERNAME/finpath-ai.git
 cd finpath-ai 
 npm run install:all 
 cp server/.env.example server/.env 
@@ -59,6 +67,42 @@ cp client/.env.example client/.env
 npm run dev 
 ``` 
 Open http://localhost:5173 
+
+## 🔑 Environment Variables
+
+### Server (`server/.env`)
+- `MONGODB_URI` — MongoDB Atlas connection string (session persistence)
+- `GROQ_API_KEY` — Groq API key for Llama 3.3 chat completions
+- `PORT` — local server port (recommended: `5050`)
+- `NODE_ENV` — set `production` on Render
+
+### Client (`client/.env`)
+- `VITE_API_URL` — API base URL  
+  - Local: `http://localhost:5050`  
+  - Production: `https://YOUR_RENDER_SERVICE.onrender.com`
+- `VITE_GOOGLE_CLIENT_ID` — Google Identity Services client ID (optional; enables Google login)
+
+## 🚢 Deployment (Vercel + Render)
+
+### Backend (Render)
+- Create a Node Web Service from this repo.
+- Root directory: `server`
+- Build command: `npm install && npm run build`
+- Start command: `npm run start`
+- Environment variables on Render:
+  - `MONGODB_URI`
+  - `GROQ_API_KEY`
+  - `NODE_ENV=production`
+  - Do not set `PORT` manually (Render injects it)
+
+### Frontend (Vercel)
+- Import the repo in Vercel.
+- Root directory: `client`
+- Build command: `npm run build`
+- Output directory: `dist`
+- Environment variables on Vercel:
+  - `VITE_API_URL=https://YOUR_RENDER_SERVICE.onrender.com`
+  - `VITE_GOOGLE_CLIENT_ID=...` (optional)
  
 ## 📊 Impact Model 
 | Metric | Estimate | 
