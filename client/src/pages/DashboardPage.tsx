@@ -1,5 +1,18 @@
+import type { ReactNode } from 'react'
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
+import {
+  BarChart3,
+  CheckCircle2,
+  CreditCard,
+  Heart,
+  RefreshCw,
+  Shield,
+  Sparkles,
+  TrendingUp,
+  Umbrella,
+  Wallet,
+} from 'lucide-react'
 import RecommendationCard from '../components/RecommendationCard'
 import { getSession } from '../lib/api'
 import type { ETRecommendation, FinancialScore, UserProfile } from '../../../shared/types'
@@ -20,52 +33,52 @@ function colorClasses(score: number): { text: string; bar: string; ring: string 
 }
 
 function overallSubtitle(score: number): string {
-  if (score > 70) return 'Excellent financial health! 🎉'
-  if (score >= 40) return 'Good foundation, room to grow 📈'
-  return "Let's build your financial future 💪"
+  if (score > 70) return 'Excellent financial health!'
+  if (score >= 40) return 'Good foundation, room to grow'
+  return "Let's build your financial future"
 }
 
-function dimensionMeta(key: DimensionKey): { title: string; emoji: string; tipLow: string; tipDefault: string } {
+function dimensionMeta(key: DimensionKey): { title: string; icon: ReactNode; tipLow: string; tipDefault: string } {
   switch (key) {
     case 'emergency':
       return {
         title: 'Emergency Fund',
-        emoji: '🛡️',
+        icon: <Shield size={18} />,
         tipLow: 'Build 6 months of expenses as safety net',
         tipDefault: 'Keep your emergency fund liquid and accessible',
       }
     case 'insurance':
       return {
         title: 'Insurance',
-        emoji: '🏥',
+        icon: <Heart size={18} />,
         tipLow: 'Get term life + health insurance immediately',
         tipDefault: 'Review coverage annually to avoid gaps',
       }
     case 'investments':
       return {
         title: 'Investments',
-        emoji: '📊',
+        icon: <TrendingUp size={18} />,
         tipLow: 'Start a SIP of even ₹500/month',
         tipDefault: 'Increase SIPs as income grows',
       }
     case 'debt':
       return {
         title: 'Debt Health',
-        emoji: '💳',
+        icon: <CreditCard size={18} />,
         tipLow: 'Prioritize high-interest debt first',
         tipDefault: 'Keep EMIs under control and avoid revolving credit',
       }
     case 'taxEfficiency':
       return {
         title: 'Tax Efficiency',
-        emoji: '💰',
+        icon: <Wallet size={18} />,
         tipLow: 'Explore 80C deductions to save up to ₹46,800/year',
         tipDefault: 'Use deductions and exemptions strategically',
       }
     case 'retirement':
       return {
         title: 'Retirement',
-        emoji: '🏖️',
+        icon: <Umbrella size={18} />,
         tipLow: 'Start NPS or PPF contributions today',
         tipDefault: 'Increase long-term contributions with raises',
       }
@@ -164,13 +177,13 @@ export default function DashboardPage() {
 
   const nextSteps = useMemo(() => {
     if (!score) return []
-    const dims: Array<{ key: DimensionKey; value: number; title: string; emoji: string; tip: string }> = (
+    const dims: Array<{ key: DimensionKey; value: number; title: string; tip: string }> = (
       Object.keys(animatedDims) as DimensionKey[]
     ).map((key) => {
       const meta = dimensionMeta(key)
       const value = score[key]
       const tip = value < 50 ? meta.tipLow : meta.tipDefault
-      return { key, value, title: meta.title, emoji: meta.emoji, tip }
+      return { key, value, title: meta.title, tip }
     })
     return [...dims].sort((a, b) => a.value - b.value).slice(0, 3)
   }, [animatedDims, score])
@@ -179,7 +192,7 @@ export default function DashboardPage() {
   const overall = score?.overall ?? 0
   const overallColors = colorClasses(overall)
 
-  const ringSize = 164
+  const ringSize = 200
   const ringStroke = 14
   const ringRadius = (ringSize - ringStroke) / 2
   const ringCircumference = 2 * Math.PI * ringRadius
@@ -187,9 +200,27 @@ export default function DashboardPage() {
 
   return (
     <div className="page-fade-in space-y-10 pb-20 md:pb-0">
-      <div>
-        <div className="text-2xl font-semibold text-textPrimary">Welcome back, {name}!</div>
-        <div className="mt-2 text-sm text-textSecondary">Your personalized ET financial journey</div>
+      <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-start">
+        <div>
+          <div className="font-display text-3xl font-extrabold tracking-tight text-textPrimary dark:text-white">
+            Welcome back, {name} <span className="align-middle">👋</span>
+          </div>
+          <div className="mt-2 text-sm text-textSecondary dark:text-gray-300">
+            Your personalized ET financial journey
+          </div>
+        </div>
+        <button
+          type="button"
+          onClick={() => {
+            const newSessionId = crypto.randomUUID()
+            window.localStorage.setItem('finpath_session_id', newSessionId)
+            navigate(`/chat?sessionId=${encodeURIComponent(newSessionId)}`)
+          }}
+          className="inline-flex h-10 items-center justify-center gap-2 rounded-full border border-border bg-white px-5 text-sm font-semibold text-textPrimary shadow-sm transition hover:bg-appBgAlt dark:border-gray-800 dark:bg-gray-900 dark:text-white dark:hover:bg-gray-800"
+        >
+          <RefreshCw size={16} />
+          Retake Assessment
+        </button>
       </div>
 
       {error ? (
@@ -199,12 +230,19 @@ export default function DashboardPage() {
       ) : null}
 
       <section className="grid gap-6 lg:grid-cols-3">
-        <div className="rounded-3xl border border-border bg-card p-6 shadow-card transition hover:shadow lg:col-span-1">
-          <div className="text-sm font-semibold text-textPrimary">Your FinPath Score</div>
-          <div className="mt-1 text-sm text-textSecondary">{overallSubtitle(overall)}</div>
+        <div className="rounded-3xl border border-border bg-card p-6 shadow-card transition hover:shadow-lg dark:border-gray-800 dark:bg-gray-900 lg:col-span-1">
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <div className="text-sm font-semibold text-textPrimary dark:text-white">Your FinPath Score</div>
+              <div className="mt-1 text-sm text-textSecondary dark:text-gray-300">{overallSubtitle(overall)}</div>
+            </div>
+            <div className="grid size-10 place-items-center rounded-2xl bg-etOrange/10 text-etOrange">
+              <BarChart3 size={18} />
+            </div>
+          </div>
 
           <div className="mt-6 flex items-center justify-center">
-            <div className="relative" style={{ width: ringSize, height: ringSize }}>
+            <div className="relative animate-pulseGlow" style={{ width: ringSize, height: ringSize }}>
               <svg width={ringSize} height={ringSize} className="block">
                 <circle
                   cx={ringSize / 2}
@@ -213,6 +251,7 @@ export default function DashboardPage() {
                   fill="transparent"
                   stroke="#E5E7EB"
                   strokeWidth={ringStroke}
+                  className="dark:stroke-gray-800"
                 />
                 <circle
                   cx={ringSize / 2}
@@ -229,22 +268,22 @@ export default function DashboardPage() {
               </svg>
               <div className="absolute inset-0 grid place-items-center">
                 <div className="text-center">
-                  <div className={['text-4xl font-bold tabular-nums', overallColors.text].join(' ')}>
+                  <div className={['text-5xl font-extrabold tabular-nums', overallColors.text].join(' ')}>
                     {animatedOverall}
                   </div>
-                  <div className="mt-1 text-xs text-textSecondary">/ 100</div>
+                  <div className="mt-1 text-xs text-textSecondary dark:text-gray-400">/ 100</div>
                 </div>
               </div>
             </div>
           </div>
 
-          <div className="mt-6 text-xs text-textSecondary">
+          <div className="mt-6 text-xs text-textSecondary dark:text-gray-400">
             {isLoading ? 'Loading your score…' : score ? 'Score loaded from your session.' : 'Complete chat to generate your score.'}
           </div>
         </div>
 
         <div className="lg:col-span-2">
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="stagger-children grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {(['emergency', 'insurance', 'investments', 'debt', 'taxEfficiency', 'retirement'] as DimensionKey[]).map(
               (key) => {
                 const meta = dimensionMeta(key)
@@ -254,25 +293,36 @@ export default function DashboardPage() {
                 const tip = value < 50 ? meta.tipLow : meta.tipDefault
 
                 return (
-                  <div key={key} className="rounded-2xl border border-border bg-card p-5 shadow-card transition hover:shadow">
+                  <div
+                    key={key}
+                    className="animate-slideUp rounded-2xl border border-border bg-card p-5 shadow-card transition hover:scale-[1.02] hover:shadow-lg dark:border-gray-800 dark:bg-gray-900"
+                  >
                     <div className="flex items-start justify-between gap-3">
-                      <div>
-                        <div className="text-xl">{meta.emoji}</div>
-                        <div className="mt-2 text-sm font-semibold text-textPrimary">{meta.title}</div>
+                      <div className="flex items-center gap-2">
+                        <div className={['grid size-9 place-items-center rounded-xl bg-etOrange/10', c.text].join(' ')}>
+                          {meta.icon}
+                        </div>
+                        <div className="text-sm font-semibold text-textPrimary dark:text-white">{meta.title}</div>
                       </div>
-                      <div className={['text-lg font-bold tabular-nums', c.text].join(' ')}>
+                      <div
+                        className={[
+                          'inline-flex items-center rounded-full px-2.5 py-1 text-xs font-bold tabular-nums',
+                          c.text,
+                          'bg-appBgAlt dark:bg-gray-800',
+                        ].join(' ')}
+                      >
                         {score ? animatedValue : '—'}
                       </div>
                     </div>
 
-                    <div className="mt-4 h-2 w-full overflow-hidden rounded-full bg-border">
+                    <div className="mt-4 h-2 w-full overflow-hidden rounded-full bg-border/80 dark:bg-gray-800">
                       <div
                         className={['h-full transition-[width] duration-500', c.bar].join(' ')}
                         style={{ width: `${Math.max(0, Math.min(100, animatedValue))}%` }}
                       />
                     </div>
 
-                    <div className="mt-3 text-sm text-textSecondary">{tip}</div>
+                    <div className="mt-3 text-sm italic text-textSecondary dark:text-gray-300">{tip}</div>
                   </div>
                 )
               },
@@ -283,47 +333,38 @@ export default function DashboardPage() {
 
       <section className="space-y-4">
         <div>
-          <div className="text-lg font-semibold text-textPrimary">Your Personalized ET Journey 🗺️</div>
-          <div className="mt-1 text-sm text-textSecondary">Curated recommendations based on your profile.</div>
+          <div className="flex items-center gap-2 font-display text-xl font-bold text-textPrimary dark:text-white">
+            <Sparkles size={18} className="text-etOrange" />
+            Your Personalized ET Journey
+          </div>
+          <div className="mt-1 text-sm text-textSecondary dark:text-gray-300">Curated recommendations based on your profile.</div>
         </div>
-        <div className="grid gap-4 md:grid-cols-2">
+        <div className="flex gap-4 overflow-x-auto pb-2 md:grid md:grid-cols-2 md:overflow-visible">
           {recs.map((rec) => (
-            <RecommendationCard key={`${rec.product}-${rec.priority}`} rec={rec} />
-          ))}
-        </div>
-      </section>
-
-      <section className="space-y-4">
-        <div className="text-lg font-semibold text-textPrimary">Your Next 3 Steps</div>
-        <div className="grid gap-4 md:grid-cols-3">
-          {nextSteps.map((s, idx) => (
-            <div key={s.key} className="rounded-2xl border border-border bg-card p-5 shadow-card transition hover:shadow">
-              <div className="flex items-start justify-between gap-3">
-                <div className="text-sm font-semibold text-textPrimary">
-                  {idx + 1}. {s.emoji} {s.title}
-                </div>
-                <div className="text-sm font-bold tabular-nums text-textSecondary">{s.value}</div>
-              </div>
-              <div className="mt-3 text-sm text-textSecondary">{s.tip}</div>
+            <div key={`${rec.product}-${rec.priority}`} className="min-w-[320px] md:min-w-0">
+              <RecommendationCard rec={rec} />
             </div>
           ))}
         </div>
       </section>
 
-      <div className="flex items-center justify-between gap-3">
-        <div className="text-xs text-textSecondary">Session: {sessionId.slice(0, 8)}</div>
-        <button
-          type="button"
-          onClick={() => {
-            const newSessionId = crypto.randomUUID()
-            window.localStorage.setItem('finpath_session_id', newSessionId)
-            navigate(`/chat?sessionId=${encodeURIComponent(newSessionId)}`)
-          }}
-          className="inline-flex h-11 items-center justify-center rounded-xl bg-etOrange px-5 text-sm font-semibold text-white shadow-card transition hover:brightness-110"
-        >
-          Retake Assessment
-        </button>
-      </div>
+      <section className="space-y-4">
+        <div className="font-display text-xl font-bold text-textPrimary dark:text-white">Your Next 3 Steps</div>
+        <div className="grid gap-4 md:grid-cols-3">
+          {nextSteps.map((s, idx) => (
+            <div key={s.key} className="rounded-2xl border border-border bg-card p-5 shadow-card transition hover:shadow-lg dark:border-gray-800 dark:bg-gray-900">
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex items-center gap-2 text-sm font-semibold text-textPrimary dark:text-white">
+                  <CheckCircle2 size={18} className="text-etOrange" />
+                  {idx + 1}. {s.title}
+                </div>
+                <div className="text-sm font-bold tabular-nums text-textSecondary dark:text-gray-300">{s.value}</div>
+              </div>
+              <div className="mt-3 text-sm text-textSecondary dark:text-gray-300">{s.tip}</div>
+            </div>
+          ))}
+        </div>
+      </section>
     </div>
   )
 }
