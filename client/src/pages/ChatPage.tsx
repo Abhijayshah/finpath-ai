@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import ChatBubble from '../components/ChatBubble'
 import { generateScore, sendMessage } from '../lib/api'
-import type { Message, UserProfile } from '@shared/types'
+import type { Message, UserProfile } from '../../../shared/types'
 
 function buildMessage(role: Message['role'], content: string): Message {
   return {

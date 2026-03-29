@@ -3,7 +3,7 @@ import { useSearchParams } from 'react-router-dom'
 import RecommendationCard from '../components/RecommendationCard'
 import ScoreCard from '../components/ScoreCard'
 import { generateScore, getSession } from '../lib/api'
-import type { ETRecommendation, FinancialScore, UserProfile } from '@shared/types'
+import type { ETRecommendation, FinancialScore, UserProfile } from '../../../shared/types'
 
 const emptyProfile: UserProfile = {
   name: 'Guest',
