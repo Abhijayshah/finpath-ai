@@ -20,6 +20,8 @@ coverage/
 .env
 .env.*
 !.env.example
+server/.env
+client/.env
 
 *.log
 npm-debug.log*

@@ -1,5 +1,7 @@
 import cors from 'cors'
 import express from 'express'
+import fs from 'node:fs'
+import path from 'node:path'
 import apiRoutes from './routes'
 import { errorHandler, notFoundHandler } from './middleware/errorHandler'
 
@@ -14,6 +16,23 @@ export function createApp() {
   })
 
   app.use('/api', apiRoutes)
+
+  if (process.env.NODE_ENV === 'production') {
+    const candidateDistPaths = [
+      path.resolve(process.cwd(), 'client/dist'),
+      path.resolve(process.cwd(), '../client/dist'),
+    ]
+
+    const clientDistPath = candidateDistPaths.find((p) => fs.existsSync(path.join(p, 'index.html')))
+
+    if (clientDistPath) {
+      app.use(express.static(clientDistPath))
+      app.get('*', (req, res, next) => {
+        if (req.path.startsWith('/api')) return next()
+        res.sendFile(path.join(clientDistPath, 'index.html'))
+      })
+    }
+  }
 
   app.use(notFoundHandler)
   app.use(errorHandler)
