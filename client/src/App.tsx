@@ -1,8 +1,9 @@
 import { Navigate, Route, Routes } from 'react-router-dom'
-import Navbar from './components/Navbar'
-import ChatPage from './pages/ChatPage'
-import DashboardPage from './pages/DashboardPage'
-import LandingPage from './pages/LandingPage'
+import Navbar from './components/Navbar.tsx'
+import ChatPage from './pages/ChatPage.tsx'
+import DashboardPage from './pages/DashboardPage.tsx'
+import LandingPage from './pages/LandingPage.tsx'
+import LoginPage from './pages/LoginPage.tsx'
 
 export default function App() {
   return (
@@ -12,6 +13,7 @@ export default function App() {
       <main className="relative mx-auto w-full max-w-6xl px-4 pb-10 pt-20 sm:px-6">
         <Routes>
           <Route path="/" element={<LandingPage />} />
+          <Route path="/login" element={<LoginPage />} />
           <Route path="/chat" element={<ChatPage />} />
           <Route path="/dashboard" element={<DashboardPage />} />
           <Route path="*" element={<Navigate to="/" replace />} />

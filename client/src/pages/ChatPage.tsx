@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import ChatBubble from '../components/ChatBubble'
-import { generateScore, sendMessage } from '../lib/api'
+import { generateScore, getSession, sendMessage } from '../lib/api'
 import type { Message, UserProfile } from '../../../shared/types'
 
 function buildMessage(role: Message['role'], content: string): Message {
@@ -15,11 +15,18 @@ function buildMessage(role: Message['role'], content: string): Message {
 
 export default function ChatPage() {
   const navigate = useNavigate()
-  const [sessionId] = useState<string>(() => crypto.randomUUID())
+  const [searchParams] = useSearchParams()
+  const [sessionId] = useState<string>(() => {
+    const fromUrl = searchParams.get('sessionId')
+    const stored = window.localStorage.getItem('finpath_session_id')
+    const picked = (fromUrl && fromUrl.trim().length > 0 ? fromUrl : null) ?? (stored && stored.trim().length > 0 ? stored : null)
+    return picked ?? crypto.randomUUID()
+  })
   const [messages, setMessages] = useState<Message[]>([])
   const [draft, setDraft] = useState<string>('')
   const [isSending, setIsSending] = useState<boolean>(false)
   const [isGeneratingScore, setIsGeneratingScore] = useState<boolean>(false)
+  const [isLoaded, setIsLoaded] = useState<boolean>(false)
   const [error, setError] = useState<string | null>(null)
 
   const scrollRef = useRef<HTMLDivElement | null>(null)
@@ -173,10 +180,47 @@ export default function ChatPage() {
   }, [isGeneratingScore, isSending, messages, navigate, sessionId])
 
   useEffect(() => {
+    window.localStorage.setItem('finpath_session_id', sessionId)
+  }, [sessionId])
+
+  useEffect(() => {
+    let cancelled = false
+
+    async function load() {
+      try {
+        const session = await getSession(sessionId)
+        if (cancelled) return
+
+        const restored: Message[] = (session.messages ?? []).map((m) => ({
+          id: crypto.randomUUID(),
+          role: m.role,
+          content: m.content,
+          timestamp: m.timestamp,
+        }))
+        setMessages(restored)
+      } catch {
+        if (!cancelled) setMessages([])
+      } finally {
+        if (!cancelled) setIsLoaded(true)
+      }
+    }
+
+    void load()
+    return () => {
+      cancelled = true
+    }
+  }, [sessionId])
+
+  useEffect(() => {
+    if (!isLoaded) return
     if (didInitRef.current) return
+    if (messages.length > 0) {
+      didInitRef.current = true
+      return
+    }
     didInitRef.current = true
     void handleSend('Hello')
-  }, [handleSend])
+  }, [handleSend, isLoaded, messages.length])
 
   useEffect(() => {
     requestAnimationFrame(() => {

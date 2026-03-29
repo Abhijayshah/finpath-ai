@@ -20,7 +20,7 @@ export default function LandingPage() {
 
         <div className="flex flex-col gap-3 sm:flex-row">
           <Link
-            to="/chat"
+            to="/login"
             className="inline-flex items-center justify-center rounded-xl bg-etOrange px-5 py-3 text-sm font-semibold text-black shadow-glow transition hover:brightness-110"
           >
             Meet FinPath AI
