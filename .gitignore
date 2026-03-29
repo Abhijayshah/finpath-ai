@@ -39,3 +39,5 @@ client/.vite/
 client/.turbo/
 
 server/.turbo/
+
+PITCH_VIDEO_SCRIPT.md

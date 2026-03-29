@@ -1,14 +1,22 @@
 # FinPath AI 🧭 
 ### Your Personal ET Finance Concierge 
 **ET AI Hackathon 2026 | Problem Statement 7 — AI Concierge for ET** 
+
+
+### Demo Video Link : https://www.youtube.com/playlist?list=PLfXvNZFBCcFSLL0b2uJuGu0WYKCyhy04Y 
+
+### Github link : https://github.com/Abhijayshah/finpath-ai 
+
+### Live Website link : https://finpath-ai.vercel.app/ 
+
  
-## ✅ Submission Requirements
+<!-- ## ✅ Submission Requirements
 - Public GitHub repo: `https://github.com/YOUR_USERNAME/finpath-ai` (replace with your final repo URL)
 - README (this file): setup + architecture + deployment
 - 3-minute pitch video script: [PITCH_VIDEO_SCRIPT.md](file:///Volumes/VideoAPFS/projects-ssd/finpath-ai/PITCH_VIDEO_SCRIPT.md)
 - Architecture document: [ARCHITECTURE.md](file:///Volumes/VideoAPFS/projects-ssd/finpath-ai/ARCHITECTURE.md)
 - Developer deep-dive: [details-for-developer.md](file:///Volumes/VideoAPFS/projects-ssd/finpath-ai/details-for-developer.md)
-- Impact model: [IMPACT_MODEL.md](file:///Volumes/VideoAPFS/projects-ssd/finpath-ai/IMPACT_MODEL.md)
+- Impact model: [IMPACT_MODEL.md](file:///Volumes/VideoAPFS/projects-ssd/finpath-ai/IMPACT_MODEL.md) -->
 
 ## 🎯 Problem 
 ET has a massive ecosystem — ET Prime, ET Markets, masterclasses, wealth summits, 
