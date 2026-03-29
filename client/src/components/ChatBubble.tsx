@@ -9,15 +9,15 @@ export default function ChatBubble({ message }: { message: Message }) {
         className={[
           'max-w-[80%] rounded-2xl px-4 py-3 text-sm leading-relaxed',
           isUser
-            ? 'bg-etOrange text-black'
-            : 'border border-[#222222] bg-[#111111] text-white',
+            ? 'bg-etOrange text-white shadow-card'
+            : 'bg-[#F3F4F6] text-textPrimary',
         ].join(' ')}
       >
         <div className="whitespace-pre-wrap">{message.content}</div>
         <div
           className={[
             'mt-2 text-[11px] opacity-70',
-            isUser ? 'text-black/70' : 'text-[#888888]',
+            isUser ? 'text-white/80' : 'text-textSecondary',
           ].join(' ')}
         >
           {new Date(message.timestamp).toLocaleTimeString([], {

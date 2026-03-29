@@ -243,8 +243,8 @@ export default function ChatPage() {
   }, [messages, isSending])
 
   return (
-    <div className="flex h-[calc(100vh-6rem)] flex-col gap-4">
-      <div className="h-1 w-full overflow-hidden rounded-full bg-[#222222]">
+    <div className="page-fade-in flex h-[calc(100vh-7.5rem)] flex-col gap-4 pb-20 md:h-[calc(100vh-6rem)] md:pb-0">
+      <div className="h-1 w-full overflow-hidden rounded-full bg-border">
         <div
           className="h-full bg-etOrange transition-[width] duration-500"
           style={{ width: `${progressPercent}%` }}
@@ -252,12 +252,12 @@ export default function ChatPage() {
       </div>
       <div className="flex items-start justify-between gap-4">
         <div>
-          <div className="text-lg font-semibold text-white">Chat</div>
-          <div className="text-xs text-slate-400">
+          <div className="text-lg font-semibold text-textPrimary">Chat</div>
+          <div className="text-xs text-textSecondary">
             AI profiling chat. One question at a time, then your FinPath Score.
           </div>
         </div>
-        <div className="hidden items-center gap-2 rounded-xl border border-[#222222] bg-[#111111] px-3 py-2 text-xs text-[#888888] sm:flex">
+        <div className="hidden items-center gap-2 rounded-xl border border-border bg-white px-3 py-2 text-xs text-textSecondary sm:flex">
           <span className="size-1.5 rounded-full bg-etOrange" />
           Session: {sessionId.slice(0, 8)}
         </div>
@@ -265,35 +265,35 @@ export default function ChatPage() {
 
       <div
         ref={scrollRef}
-        className="flex-1 space-y-3 overflow-y-auto rounded-2xl border border-[#222222] bg-[#111111] p-4"
+        className="flex-1 space-y-3 overflow-y-auto rounded-2xl border border-border bg-white p-4 shadow-card"
       >
         {messages.map((m) => (
           <ChatBubble key={m.id} message={m} />
         ))}
         {isSending ? (
           <div className="flex justify-start">
-            <div className="inline-flex items-center gap-2 rounded-2xl border border-[#222222] bg-[#0A0A0A] px-4 py-3 text-sm text-white">
+            <div className="inline-flex items-center gap-2 rounded-2xl bg-[#F3F4F6] px-4 py-3 text-sm text-textPrimary">
               <span className="inline-flex items-center gap-1">
-                <span className="size-1.5 animate-bounce rounded-full bg-slate-400 [animation-delay:-0.2s]" />
-                <span className="size-1.5 animate-bounce rounded-full bg-slate-400 [animation-delay:-0.1s]" />
-                <span className="size-1.5 animate-bounce rounded-full bg-slate-400" />
+                <span className="size-1.5 animate-bounce rounded-full bg-textSecondary [animation-delay:-0.2s]" />
+                <span className="size-1.5 animate-bounce rounded-full bg-textSecondary [animation-delay:-0.1s]" />
+                <span className="size-1.5 animate-bounce rounded-full bg-textSecondary" />
               </span>
-              <span className="text-xs text-[#888888]">FinPath AI is typing</span>
+              <span className="text-xs text-textSecondary">FinPath AI is typing</span>
             </div>
           </div>
         ) : null}
       </div>
 
-      <div className="rounded-2xl border border-[#222222] bg-[#111111] p-3">
+      <div className="rounded-2xl border border-border bg-white p-3 shadow-card">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-end">
           <div className="flex-1">
-            <label className="text-xs font-medium text-[#888888]">Your message</label>
+            <label className="text-xs font-medium text-textSecondary">Your message</label>
             <textarea
               value={draft}
               onChange={(e) => setDraft(e.target.value)}
               rows={2}
               placeholder="Ask about budgeting, investing, tax, insurance…"
-              className="mt-2 w-full resize-none rounded-xl border border-[#222222] bg-[#0A0A0A] px-3 py-2 text-sm text-white outline-none placeholder:text-[#555555] focus:border-etOrange/60"
+              className="mt-2 w-full resize-none rounded-xl border border-border bg-white px-3 py-2 text-sm text-textPrimary outline-none placeholder:text-textSecondary focus:border-etOrange/60"
               onKeyDown={(e) => {
                 if (e.key === 'Enter' && !e.shiftKey) {
                   e.preventDefault()
@@ -301,7 +301,7 @@ export default function ChatPage() {
                 }
               }}
             />
-            <div className="mt-2 text-[11px] text-[#888888]">
+            <div className="mt-2 text-[11px] text-textSecondary">
               Press Enter to send, Shift + Enter for a new line
             </div>
           </div>
@@ -310,8 +310,8 @@ export default function ChatPage() {
             className={[
               'inline-flex h-11 items-center justify-center rounded-xl px-4 text-sm font-semibold transition',
               canSend
-                ? 'bg-etOrange text-black hover:brightness-110'
-                : 'cursor-not-allowed border border-[#222222] bg-[#0A0A0A] text-[#555555]',
+                ? 'bg-etOrange text-white hover:brightness-110'
+                : 'cursor-not-allowed border border-border bg-appBgAlt text-textSecondary',
             ].join(' ')}
             onClick={() => void handleSend(draft)}
             disabled={!canSend || isGeneratingScore}
@@ -319,7 +319,7 @@ export default function ChatPage() {
             {isGeneratingScore ? 'Scoring…' : 'Send'}
           </button>
         </div>
-        {error ? <div className="mt-3 text-xs text-red-300">{error}</div> : null}
+        {error ? <div className="mt-3 text-xs text-red-600">{error}</div> : null}
       </div>
     </div>
   )

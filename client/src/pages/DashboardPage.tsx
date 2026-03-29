@@ -14,9 +14,9 @@ function getScoreColor(score: number): 'green' | 'orange' | 'red' {
 
 function colorClasses(score: number): { text: string; bar: string; ring: string } {
   const c = getScoreColor(score)
-  if (c === 'green') return { text: 'text-emerald-300', bar: 'bg-emerald-500', ring: 'stroke-emerald-500' }
+  if (c === 'green') return { text: 'text-emerald-600', bar: 'bg-emerald-500', ring: 'stroke-emerald-500' }
   if (c === 'orange') return { text: 'text-etOrange', bar: 'bg-etOrange', ring: 'stroke-etOrange' }
-  return { text: 'text-red-300', bar: 'bg-red-500', ring: 'stroke-red-500' }
+  return { text: 'text-red-600', bar: 'bg-red-500', ring: 'stroke-red-500' }
 }
 
 function overallSubtitle(score: number): string {
@@ -186,22 +186,22 @@ export default function DashboardPage() {
   const ringOffset = ringCircumference - (animatedOverall / 100) * ringCircumference
 
   return (
-    <div className="space-y-10">
+    <div className="page-fade-in space-y-10 pb-20 md:pb-0">
       <div>
-        <div className="text-2xl font-semibold text-white">Welcome back, {name}!</div>
-        <div className="mt-2 text-sm text-[#888888]">Your personalized ET financial journey</div>
+        <div className="text-2xl font-semibold text-textPrimary">Welcome back, {name}!</div>
+        <div className="mt-2 text-sm text-textSecondary">Your personalized ET financial journey</div>
       </div>
 
       {error ? (
-        <div className="rounded-2xl border border-red-500/30 bg-red-500/10 p-4 text-sm text-red-200">
+        <div className="rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
           {error}
         </div>
       ) : null}
 
       <section className="grid gap-6 lg:grid-cols-3">
-        <div className="rounded-3xl border border-[#222222] bg-[#111111] p-6 lg:col-span-1">
-          <div className="text-sm font-semibold text-white">Your FinPath Score</div>
-          <div className="mt-1 text-sm text-[#888888]">{overallSubtitle(overall)}</div>
+        <div className="rounded-3xl border border-border bg-card p-6 shadow-card transition hover:shadow lg:col-span-1">
+          <div className="text-sm font-semibold text-textPrimary">Your FinPath Score</div>
+          <div className="mt-1 text-sm text-textSecondary">{overallSubtitle(overall)}</div>
 
           <div className="mt-6 flex items-center justify-center">
             <div className="relative" style={{ width: ringSize, height: ringSize }}>
@@ -211,7 +211,7 @@ export default function DashboardPage() {
                   cy={ringSize / 2}
                   r={ringRadius}
                   fill="transparent"
-                  stroke="#222222"
+                  stroke="#E5E7EB"
                   strokeWidth={ringStroke}
                 />
                 <circle
@@ -232,13 +232,13 @@ export default function DashboardPage() {
                   <div className={['text-4xl font-bold tabular-nums', overallColors.text].join(' ')}>
                     {animatedOverall}
                   </div>
-                  <div className="mt-1 text-xs text-[#888888]">/ 100</div>
+                  <div className="mt-1 text-xs text-textSecondary">/ 100</div>
                 </div>
               </div>
             </div>
           </div>
 
-          <div className="mt-6 text-xs text-[#888888]">
+          <div className="mt-6 text-xs text-textSecondary">
             {isLoading ? 'Loading your score…' : score ? 'Score loaded from your session.' : 'Complete chat to generate your score.'}
           </div>
         </div>
@@ -254,25 +254,25 @@ export default function DashboardPage() {
                 const tip = value < 50 ? meta.tipLow : meta.tipDefault
 
                 return (
-                  <div key={key} className="rounded-2xl border border-[#222222] bg-[#111111] p-5">
+                  <div key={key} className="rounded-2xl border border-border bg-card p-5 shadow-card transition hover:shadow">
                     <div className="flex items-start justify-between gap-3">
                       <div>
                         <div className="text-xl">{meta.emoji}</div>
-                        <div className="mt-2 text-sm font-semibold text-white">{meta.title}</div>
+                        <div className="mt-2 text-sm font-semibold text-textPrimary">{meta.title}</div>
                       </div>
                       <div className={['text-lg font-bold tabular-nums', c.text].join(' ')}>
                         {score ? animatedValue : '—'}
                       </div>
                     </div>
 
-                    <div className="mt-4 h-2 w-full overflow-hidden rounded-full bg-[#222222]">
+                    <div className="mt-4 h-2 w-full overflow-hidden rounded-full bg-border">
                       <div
                         className={['h-full transition-[width] duration-500', c.bar].join(' ')}
                         style={{ width: `${Math.max(0, Math.min(100, animatedValue))}%` }}
                       />
                     </div>
 
-                    <div className="mt-3 text-sm text-[#888888]">{tip}</div>
+                    <div className="mt-3 text-sm text-textSecondary">{tip}</div>
                   </div>
                 )
               },
@@ -283,8 +283,8 @@ export default function DashboardPage() {
 
       <section className="space-y-4">
         <div>
-          <div className="text-lg font-semibold text-white">Your Personalized ET Journey 🗺️</div>
-          <div className="mt-1 text-sm text-[#888888]">Curated recommendations based on your profile.</div>
+          <div className="text-lg font-semibold text-textPrimary">Your Personalized ET Journey 🗺️</div>
+          <div className="mt-1 text-sm text-textSecondary">Curated recommendations based on your profile.</div>
         </div>
         <div className="grid gap-4 md:grid-cols-2">
           {recs.map((rec) => (
@@ -294,24 +294,24 @@ export default function DashboardPage() {
       </section>
 
       <section className="space-y-4">
-        <div className="text-lg font-semibold text-white">Your Next 3 Steps</div>
+        <div className="text-lg font-semibold text-textPrimary">Your Next 3 Steps</div>
         <div className="grid gap-4 md:grid-cols-3">
           {nextSteps.map((s, idx) => (
-            <div key={s.key} className="rounded-2xl border border-[#222222] bg-[#111111] p-5">
+            <div key={s.key} className="rounded-2xl border border-border bg-card p-5 shadow-card transition hover:shadow">
               <div className="flex items-start justify-between gap-3">
-                <div className="text-sm font-semibold text-white">
+                <div className="text-sm font-semibold text-textPrimary">
                   {idx + 1}. {s.emoji} {s.title}
                 </div>
-                <div className="text-sm font-bold tabular-nums text-[#888888]">{s.value}</div>
+                <div className="text-sm font-bold tabular-nums text-textSecondary">{s.value}</div>
               </div>
-              <div className="mt-3 text-sm text-[#888888]">{s.tip}</div>
+              <div className="mt-3 text-sm text-textSecondary">{s.tip}</div>
             </div>
           ))}
         </div>
       </section>
 
       <div className="flex items-center justify-between gap-3">
-        <div className="text-xs text-[#888888]">Session: {sessionId.slice(0, 8)}</div>
+        <div className="text-xs text-textSecondary">Session: {sessionId.slice(0, 8)}</div>
         <button
           type="button"
           onClick={() => {
@@ -319,7 +319,7 @@ export default function DashboardPage() {
             window.localStorage.setItem('finpath_session_id', newSessionId)
             navigate(`/chat?sessionId=${encodeURIComponent(newSessionId)}`)
           }}
-          className="inline-flex h-11 items-center justify-center rounded-xl bg-etOrange px-5 text-sm font-semibold text-black transition hover:brightness-110"
+          className="inline-flex h-11 items-center justify-center rounded-xl bg-etOrange px-5 text-sm font-semibold text-white shadow-card transition hover:brightness-110"
         >
           Retake Assessment
         </button>

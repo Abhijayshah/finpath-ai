@@ -27,8 +27,7 @@ export function createApp() {
 
     if (clientDistPath) {
       app.use(express.static(clientDistPath))
-      app.get('*', (req, res, next) => {
-        if (req.path.startsWith('/api')) return next()
+      app.get(/^(?!\/api).*/, (_req, res) => {
         res.sendFile(path.join(clientDistPath, 'index.html'))
       })
     }

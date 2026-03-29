@@ -1,81 +1,74 @@
-import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-
-function getStoredSessionId(): string | null {
-  const v = window.localStorage.getItem('finpath_session_id')
-  return v && v.trim().length > 0 ? v : null
-}
-
-function setStoredSessionId(sessionId: string) {
-  window.localStorage.setItem('finpath_session_id', sessionId)
-}
-
-function setStoredDisplayName(name: string) {
-  window.localStorage.setItem('finpath_display_name', name)
-}
+import { useEffect, useState } from 'react'
+import { useAuth } from '../context/authStore'
 
 export default function LoginPage() {
   const navigate = useNavigate()
-  const existingSessionId = useMemo(() => getStoredSessionId(), [])
-  const [name, setName] = useState<string>('')
+  const { isLoggedIn, login } = useAuth()
+  const [isLoading, setIsLoading] = useState<boolean>(false)
 
-  function startNewSession() {
-    const sessionId = crypto.randomUUID()
-    setStoredSessionId(sessionId)
-    setStoredDisplayName(name.trim())
-    navigate(`/chat?sessionId=${encodeURIComponent(sessionId)}`)
-  }
-
-  function continueSession() {
-    if (!existingSessionId) return
-    navigate(`/chat?sessionId=${encodeURIComponent(existingSessionId)}`)
-  }
+  useEffect(() => {
+    if (isLoggedIn) navigate('/chat')
+  }, [isLoggedIn, navigate])
 
   return (
-    <div className="mx-auto grid max-w-xl gap-6">
-      <div className="rounded-3xl border border-[#222222] bg-[#111111] p-6">
-        <div className="text-lg font-semibold text-white">Login</div>
-        <div className="mt-1 text-sm text-[#888888]">
-          This is a lightweight demo login to start a new FinPath AI session (no password).
+    <div className="page-fade-in mx-auto grid max-w-md place-items-center pb-20 md:pb-0">
+      <div className="w-full rounded-3xl border border-border bg-card p-8 shadow-card transition hover:shadow">
+        <div className="mx-auto grid size-12 place-items-center rounded-2xl bg-etOrange text-white shadow-card">
+          <span className="text-sm font-bold">FP</span>
         </div>
 
-        <div className="mt-6 space-y-4">
-          <div>
-            <label className="text-xs font-medium text-[#888888]">Your name (optional)</label>
-            <input
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="e.g., Abhijay"
-              className="mt-2 w-full rounded-xl border border-[#222222] bg-[#0A0A0A] px-3 py-2 text-sm text-white outline-none placeholder:text-[#555555] focus:border-etOrange/60"
+        <div className="mt-6 text-center">
+          <div className="text-2xl font-semibold text-textPrimary">Welcome to FinPath AI</div>
+          <div className="mt-2 text-sm text-textSecondary">Your personal ET finance concierge</div>
+        </div>
+
+        <button
+          type="button"
+          disabled={isLoading}
+          onClick={() => {
+            if (isLoading) return
+            setIsLoading(true)
+            window.setTimeout(() => {
+              login({
+                name: 'Abhijay Kumar Shah',
+                email: 'abhijayshah74@gmail.com',
+                avatar: 'AK',
+              })
+              setIsLoading(false)
+              navigate('/chat')
+            }, 1500)
+          }}
+          className={[
+            'mt-8 inline-flex h-12 w-full items-center justify-center gap-3 rounded-xl border px-4 text-sm font-semibold transition',
+            isLoading
+              ? 'cursor-not-allowed border-border bg-white text-textSecondary'
+              : 'border-[#4285F4]/30 bg-white text-textPrimary hover:bg-appBgAlt',
+          ].join(' ')}
+        >
+          <svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true">
+            <path
+              fill="#EA4335"
+              d="M24 9.5c3.54 0 6.71 1.22 9.21 3.62l6.85-6.85C35.9 2.43 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.23 17.74 9.5 24 9.5z"
             />
-          </div>
-
-          <button
-            type="button"
-            onClick={startNewSession}
-            className="inline-flex h-11 w-full items-center justify-center rounded-xl bg-etOrange px-5 text-sm font-semibold text-black shadow-glow transition hover:brightness-110"
-          >
-            Start as New User
-          </button>
-
-          {existingSessionId ? (
-            <button
-              type="button"
-              onClick={continueSession}
-              className="inline-flex h-11 w-full items-center justify-center rounded-xl border border-[#222222] bg-[#0A0A0A] px-5 text-sm font-semibold text-white transition hover:border-etOrange/40"
-            >
-              Continue Previous Session
-            </button>
+            <path
+              fill="#4285F4"
+              d="M46.1 24.5c0-1.64-.15-3.22-.43-4.75H24v9h12.45c-.54 2.9-2.17 5.36-4.61 7.02l7.08 5.5C43.29 37.15 46.1 31.32 46.1 24.5z"
+            />
+            <path
+              fill="#FBBC05"
+              d="M10.54 28.59c-.5-1.48-.78-3.06-.78-4.69s.28-3.21.78-4.69l-7.98-6.19C.92 16.46 0 20.12 0 23.9c0 3.78.92 7.44 2.56 10.88l7.98-6.19z"
+            />
+            <path
+              fill="#34A853"
+              d="M24 48c6.48 0 11.93-2.14 15.91-5.82l-7.08-5.5c-1.97 1.32-4.5 2.1-8.83 2.1-6.26 0-11.57-3.73-13.46-9.01l-7.98 6.19C6.51 42.62 14.62 48 24 48z"
+            />
+          </svg>
+          <span>Continue with Google 🔑</span>
+          {isLoading ? (
+            <span className="ml-auto inline-flex size-4 animate-spin rounded-full border-2 border-border border-t-etOrange" />
           ) : null}
-        </div>
-      </div>
-
-      <div className="rounded-2xl border border-[#222222] bg-[#111111] p-5">
-        <div className="text-sm font-semibold text-white">What happens next?</div>
-        <div className="mt-2 text-sm text-[#888888]">
-          FinPath AI will ask one profiling question at a time. When the profile is complete, it
-          generates your FinPath Score and redirects you to the Dashboard.
-        </div>
+        </button>
       </div>
     </div>
   )
