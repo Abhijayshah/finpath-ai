@@ -7,8 +7,8 @@ import LoginPage from './pages/LoginPage.tsx'
 
 export default function App() {
   return (
-    <div className="min-h-screen bg-[#0b0d12] text-slate-100">
-      <div className="pointer-events-none fixed inset-0 bg-[radial-gradient(900px_600px_at_20%_20%,rgba(255,107,0,0.14),transparent_55%),radial-gradient(900px_600px_at_80%_10%,rgba(255,107,0,0.08),transparent_60%)]" />
+    <div className="min-h-screen bg-[#0A0A0A] text-white">
+      <div className="pointer-events-none fixed inset-0 bg-[radial-gradient(900px_600px_at_20%_20%,rgba(255,107,0,0.10),transparent_60%),radial-gradient(900px_600px_at_80%_10%,rgba(255,107,0,0.06),transparent_65%)]" />
       <Navbar />
       <main className="relative mx-auto w-full max-w-6xl px-4 pb-10 pt-20 sm:px-6">
         <Routes>

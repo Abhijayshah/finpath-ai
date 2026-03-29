@@ -1,9 +1,16 @@
 import mongoose from 'mongoose'
 
-export async function connectToMongo(mongoUri: string): Promise<void> {
-  if (!mongoUri) {
-    throw new Error('MONGODB_URI is required')
-  }
+mongoose.set('bufferCommands', false)
 
-  await mongoose.connect(mongoUri)
+export async function connectToMongo(mongoUri: string): Promise<boolean> {
+  if (!mongoUri) return false
+
+  try {
+    await mongoose.connect(mongoUri, {
+      serverSelectionTimeoutMS: 3000,
+    })
+    return true
+  } catch {
+    return false
+  }
 }

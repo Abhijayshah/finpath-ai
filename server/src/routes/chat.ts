@@ -18,16 +18,37 @@ const SYSTEM_PROMPT = `You are FinPath AI, a warm and intelligent personal finan
 Follow this EXACT profiling sequence — ask ONE question at a time, naturally: 
 1. Greet warmly and ask their name 
 2. Ask their age 
-3. Ask their monthly income (in rupees) 
+3. Ask their monthly income in rupees 
 4. Ask their monthly expenses 
 5. Ask their primary financial goal (options: wealth building, retirement, child education, buying home, emergency fund, tax saving) 
 6. Ask their current investments (FD, mutual funds, stocks, crypto, PPF, none) 
 7. Ask their risk appetite (conservative / moderate / aggressive) 
-8. Ask if they have health/life insurance (yes/no) 
-9. Ask if they have an emergency fund of 6 months expenses (yes/no) 
-10. After collecting all info, say: "Great! I have everything I need. Let me build your personalized FinPath Score and ET journey..." then output a JSON block wrapped in <PROFILE_COMPLETE> tags with all collected data. 
+8. Ask if they have health or life insurance (yes/no) 
+9. Ask if they have an emergency fund covering 6 months of expenses (yes/no) 
+10. After collecting ALL 9 answers, output this exact format: 
 
-Be conversational, warm, use emojis occasionally. Never ask more than one question per message. If user goes off-topic, gently bring them back.`
+Great! I have everything I need. Let me build your personalized FinPath Score and ET journey... ✨ 
+
+<PROFILE_COMPLETE> 
+{ 
+  "name": "<value>", 
+  "age": <number>, 
+  "income": <number>, 
+  "expenses": <number>, 
+  "goals": "<value>", 
+  "investments": ["<value>"], 
+  "riskAppetite": "<conservative|moderate|aggressive>", 
+  "hasInsurance": <true|false>, 
+  "hasEmergencyFund": <true|false> 
+} 
+</PROFILE_COMPLETE> 
+
+Rules: 
+- Ask ONE question per message only 
+- Be warm, friendly, use emojis occasionally 
+- If user goes off-topic, gently redirect 
+- Never output PROFILE_COMPLETE until all 9 questions are answered 
+- Always output valid JSON inside the PROFILE_COMPLETE tags`
 
 function normalizeGoal(value: unknown): FinancialGoal | null {
   if (typeof value !== 'string') return null
@@ -85,8 +106,14 @@ function normalizeUserProfile(raw: unknown): UserProfile | null {
   const expenses = typeof r.expenses === 'number' ? r.expenses : Number(r.expenses)
 
   const goalFromGoalKey = normalizeGoal(r.goal)
-  const goalsFromGoalsKey = Array.isArray(r.goals) ? r.goals.map(normalizeGoal).filter(Boolean) : []
-  const goals: FinancialGoal[] = goalFromGoalKey ? [goalFromGoalKey] : (goalsFromGoalsKey as FinancialGoal[])
+  const goalFromGoalsString = normalizeGoal(r.goals)
+  const goalsFromGoalsArray = Array.isArray(r.goals) ? r.goals.map(normalizeGoal).filter(Boolean) : []
+  const goals: FinancialGoal[] =
+    goalFromGoalKey
+      ? [goalFromGoalKey]
+      : goalFromGoalsString
+        ? [goalFromGoalsString]
+        : (goalsFromGoalsArray as FinancialGoal[])
 
   const investments = normalizeInvestments(r.investments)
 
@@ -136,7 +163,7 @@ function normalizeUserProfile(raw: unknown): UserProfile | null {
   }
 }
 
-function extractProfileFromClaudeText(text: string): UserProfile | null {
+function extractProfileFromAiText(text: string): UserProfile | null {
   const match = text.match(/<PROFILE_COMPLETE>([\s\S]*?)<\/PROFILE_COMPLETE>/i)
   if (!match) return null
   const jsonText = match[1]?.trim()
@@ -161,12 +188,12 @@ router.post<{}, ChatResponseBody, ChatRequestBody>('/', async (req, res) => {
     return res.status(400).json({ text: 'Invalid request: messages must be an array.' })
   }
 
-  const apiKey = process.env.CLAUDE_API_KEY
+  const apiKey = process.env.GROQ_API_KEY
   if (!apiKey) {
-    return res.status(500).json({ text: 'Server misconfigured: CLAUDE_API_KEY is missing.' })
+    return res.status(500).json({ text: 'Server misconfigured: GROQ_API_KEY is missing.' })
   }
 
-  const claudeMessages = messages
+  const chatMessages = messages
     .filter((m) => m && (m.role === 'user' || m.role === 'assistant') && typeof m.content === 'string')
     .map((m) => ({
       role: m.role,
@@ -174,18 +201,17 @@ router.post<{}, ChatResponseBody, ChatRequestBody>('/', async (req, res) => {
     }))
 
   try {
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
+    const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
       method: 'POST',
       headers: {
         'content-type': 'application/json',
-        'x-api-key': apiKey,
-        'anthropic-version': '2023-06-01',
+        Authorization: `Bearer ${apiKey}`,
       },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
-        max_tokens: 700,
-        system: SYSTEM_PROMPT,
-        messages: claudeMessages,
+        model: 'llama-3.3-70b-versatile',
+        messages: [{ role: 'system', content: SYSTEM_PROMPT }, ...chatMessages],
+        temperature: 0.7,
+        max_tokens: 1024,
       }),
     })
 
@@ -193,16 +219,14 @@ router.post<{}, ChatResponseBody, ChatRequestBody>('/', async (req, res) => {
       const errorText = await response.text().catch(() => '')
       return res
         .status(502)
-        .json({ text: `Claude API error (${response.status}): ${errorText || 'Unknown error'}` })
+        .json({ text: `Groq API error (${response.status}): ${errorText || 'Unknown error'}` })
     }
 
     const data = (await response.json()) as {
-      content?: Array<{ type: string; text?: string }>
+      choices?: Array<{ message?: { content?: string } }>
     }
 
-    const text =
-      data.content?.find((c) => c.type === 'text')?.text ??
-      'I had trouble generating a response. Please try again.'
+    const text = data.choices?.[0]?.message?.content ?? 'I had trouble generating a response. Please try again.'
 
     const assistantTimestamp = new Date().toISOString()
     const storedMessages = [
@@ -216,19 +240,23 @@ router.post<{}, ChatResponseBody, ChatRequestBody>('/', async (req, res) => {
       { role: 'assistant' as const, content: text, timestamp: assistantTimestamp },
     ]
 
-    const extractedProfile = extractProfileFromClaudeText(text)
+    const extractedProfile = extractProfileFromAiText(text)
 
-    await SessionModel.findOneAndUpdate(
-      { sessionId },
-      {
-        $set: {
-          sessionId,
-          messages: storedMessages,
-          ...(extractedProfile ? { profile: extractedProfile } : {}),
+    try {
+      await SessionModel.findOneAndUpdate(
+        { sessionId },
+        {
+          $set: {
+            sessionId,
+            messages: storedMessages,
+            ...(extractedProfile ? { profile: extractedProfile } : {}),
+          },
         },
-      },
-      { upsert: true, new: true, setDefaultsOnInsert: true },
-    )
+        { upsert: true, new: true, setDefaultsOnInsert: true },
+      )
+    } catch {
+      return res.json({ text })
+    }
 
     return res.json({ text })
   } catch (err) {

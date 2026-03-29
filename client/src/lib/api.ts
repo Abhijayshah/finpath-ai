@@ -2,7 +2,7 @@ import axios from 'axios'
 import type { ETRecommendation, FinancialScore, Message, Session, UserProfile } from '../../../shared/types'
 
 const apiBaseUrl =
-  (import.meta.env.VITE_API_URL as string | undefined) ?? 'http://localhost:5000'
+  (import.meta.env.VITE_API_URL as string | undefined) ?? 'http://localhost:5050'
 
 export const api = axios.create({
   baseURL: apiBaseUrl,

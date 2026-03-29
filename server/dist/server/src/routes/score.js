@@ -6,7 +6,7 @@ const router = (0, express_1.Router)();
 function clampScore(value) {
     return Math.max(0, Math.min(100, Math.round(value)));
 }
-router.post('/', (req, res) => {
+router.post('/', async (req, res) => {
     const { profile, sessionId } = req.body;
     if (!sessionId || typeof sessionId !== 'string') {
         return res.status(400).json({
@@ -85,7 +85,7 @@ router.post('/', (req, res) => {
     }
     if (profile.income > 50000) {
         recommendations.push({
-            product: 'ET Wealth Management (Partner)',
+            product: 'ET Wealth',
             reason: 'Get help building a goal-based plan aligned to your income and risk profile.',
             link: 'https://economictimes.indiatimes.com/wealth',
             priority: 'medium',
@@ -94,29 +94,34 @@ router.post('/', (req, res) => {
     const primaryGoal = profile.goals?.[0];
     if (primaryGoal === 'retirement') {
         recommendations.push({
-            product: 'ET Retirement Masterclass',
+            product: 'ET Retirement',
             reason: 'Learn step-by-step retirement planning with ET’s curated learning track.',
-            link: 'https://economictimes.indiatimes.com/prime',
+            link: 'https://economictimes.indiatimes.com/wealth/plan/retirement',
             priority: 'high',
         });
     }
     if (!hasInsurance) {
         recommendations.push({
-            product: 'ET Insurance Marketplace (Partner)',
+            product: 'ET Insurance',
             reason: 'Compare health/life insurance options and pick coverage that fits your needs.',
-            link: 'https://economictimes.indiatimes.com/wealth/insurance',
+            link: 'https://economictimes.indiatimes.com/wealth/insure',
             priority: 'high',
         });
     }
     if (primaryGoal === 'child education') {
         recommendations.push({
-            product: 'ET Education Planning Guide',
+            product: 'ET Education',
             reason: 'Plan for education costs with goal-based investing and inflation-aware estimates.',
-            link: 'https://economictimes.indiatimes.com/wealth',
+            link: 'https://economictimes.indiatimes.com/wealth/plan',
             priority: 'medium',
         });
     }
-    void Session_1.SessionModel.findOneAndUpdate({ sessionId }, { $set: { sessionId, profile, score, recommendations } }, { upsert: true, new: true, setDefaultsOnInsert: true });
+    try {
+        await Session_1.SessionModel.findOneAndUpdate({ sessionId }, { $set: { sessionId, profile, score, recommendations } }, { upsert: true, new: true, setDefaultsOnInsert: true });
+    }
+    catch {
+        return res.status(503).json({ score, recommendations });
+    }
     return res.json({ score, recommendations });
 });
 exports.default = router;

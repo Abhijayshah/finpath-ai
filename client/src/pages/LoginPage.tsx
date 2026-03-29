@@ -33,20 +33,20 @@ export default function LoginPage() {
 
   return (
     <div className="mx-auto grid max-w-xl gap-6">
-      <div className="rounded-3xl bg-white/5 p-6 ring-1 ring-white/10">
+      <div className="rounded-3xl border border-[#222222] bg-[#111111] p-6">
         <div className="text-lg font-semibold text-white">Login</div>
-        <div className="mt-1 text-sm text-slate-400">
+        <div className="mt-1 text-sm text-[#888888]">
           This is a lightweight demo login to start a new FinPath AI session (no password).
         </div>
 
         <div className="mt-6 space-y-4">
           <div>
-            <label className="text-xs font-medium text-slate-300">Your name (optional)</label>
+            <label className="text-xs font-medium text-[#888888]">Your name (optional)</label>
             <input
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="e.g., Abhijay"
-              className="mt-2 w-full rounded-xl bg-black/40 px-3 py-2 text-sm text-white ring-1 ring-white/10 outline-none placeholder:text-slate-500 focus:ring-etOrange/50"
+              className="mt-2 w-full rounded-xl border border-[#222222] bg-[#0A0A0A] px-3 py-2 text-sm text-white outline-none placeholder:text-[#555555] focus:border-etOrange/60"
             />
           </div>
 
@@ -62,7 +62,7 @@ export default function LoginPage() {
             <button
               type="button"
               onClick={continueSession}
-              className="inline-flex h-11 w-full items-center justify-center rounded-xl bg-white/5 px-5 text-sm font-semibold text-white ring-1 ring-white/10 transition hover:bg-white/10"
+              className="inline-flex h-11 w-full items-center justify-center rounded-xl border border-[#222222] bg-[#0A0A0A] px-5 text-sm font-semibold text-white transition hover:border-etOrange/40"
             >
               Continue Previous Session
             </button>
@@ -70,9 +70,9 @@ export default function LoginPage() {
         </div>
       </div>
 
-      <div className="rounded-2xl bg-white/5 p-5 ring-1 ring-white/10">
+      <div className="rounded-2xl border border-[#222222] bg-[#111111] p-5">
         <div className="text-sm font-semibold text-white">What happens next?</div>
-        <div className="mt-2 text-sm text-slate-300">
+        <div className="mt-2 text-sm text-[#888888]">
           FinPath AI will ask one profiling question at a time. When the profile is complete, it
           generates your FinPath Score and redirects you to the Dashboard.
         </div>

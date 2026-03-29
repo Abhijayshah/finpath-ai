@@ -1,78 +1,105 @@
 import { useEffect, useMemo, useState } from 'react'
-import { useSearchParams } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import RecommendationCard from '../components/RecommendationCard'
-import ScoreCard from '../components/ScoreCard'
-import { generateScore, getSession } from '../lib/api'
+import { getSession } from '../lib/api'
 import type { ETRecommendation, FinancialScore, UserProfile } from '../../../shared/types'
 
-const emptyProfile: UserProfile = {
-  name: 'Guest',
-  age: 28,
-  income: 120000,
-  expenses: 65000,
-  goals: ['emergency fund', 'retirement'],
-  investments: ['mutual funds'],
-  riskAppetite: 'moderate',
-  insurance: ['Health insurance'],
-  hasEmergencyFund: false,
+type DimensionKey = keyof Omit<FinancialScore, 'overall'>
+
+function getScoreColor(score: number): 'green' | 'orange' | 'red' {
+  if (score > 70) return 'green'
+  if (score >= 40) return 'orange'
+  return 'red'
 }
 
-function parseCsv(value: string): string[] {
-  return value
-    .split(',')
-    .map((s) => s.trim())
-    .filter((s) => s.length > 0)
+function colorClasses(score: number): { text: string; bar: string; ring: string } {
+  const c = getScoreColor(score)
+  if (c === 'green') return { text: 'text-emerald-300', bar: 'bg-emerald-500', ring: 'stroke-emerald-500' }
+  if (c === 'orange') return { text: 'text-etOrange', bar: 'bg-etOrange', ring: 'stroke-etOrange' }
+  return { text: 'text-red-300', bar: 'bg-red-500', ring: 'stroke-red-500' }
 }
 
-function parseGoals(value: string): UserProfile['goals'] {
-  const allowed: UserProfile['goals'][number][] = [
-    'wealth building',
-    'retirement',
-    'child education',
-    'buying home',
-    'emergency fund',
-    'tax saving',
-  ]
-  const parsed = parseCsv(value).map((s) => s.toLowerCase())
-  return parsed.filter((s): s is UserProfile['goals'][number] => (allowed as string[]).includes(s))
+function overallSubtitle(score: number): string {
+  if (score > 70) return 'Excellent financial health! 🎉'
+  if (score >= 40) return 'Good foundation, room to grow 📈'
+  return "Let's build your financial future 💪"
 }
 
-function parseInvestments(value: string): UserProfile['investments'] {
-  const allowed: UserProfile['investments'][number][] = [
-    'FD',
-    'mutual funds',
-    'stocks',
-    'crypto',
-    'PPF',
-    'none',
-  ]
-
-  const parsed = parseCsv(value).map((s) => {
-    const lower = s.toLowerCase()
-    if (lower === 'fd') return 'FD'
-    if (lower === 'ppf') return 'PPF'
-    return lower
-  })
-
-  const filtered = parsed.filter((s): s is UserProfile['investments'][number] =>
-    (allowed as string[]).includes(s),
-  )
-
-  return Array.from(new Set(filtered))
+function dimensionMeta(key: DimensionKey): { title: string; emoji: string; tipLow: string; tipDefault: string } {
+  switch (key) {
+    case 'emergency':
+      return {
+        title: 'Emergency Fund',
+        emoji: '🛡️',
+        tipLow: 'Build 6 months of expenses as safety net',
+        tipDefault: 'Keep your emergency fund liquid and accessible',
+      }
+    case 'insurance':
+      return {
+        title: 'Insurance',
+        emoji: '🏥',
+        tipLow: 'Get term life + health insurance immediately',
+        tipDefault: 'Review coverage annually to avoid gaps',
+      }
+    case 'investments':
+      return {
+        title: 'Investments',
+        emoji: '📊',
+        tipLow: 'Start a SIP of even ₹500/month',
+        tipDefault: 'Increase SIPs as income grows',
+      }
+    case 'debt':
+      return {
+        title: 'Debt Health',
+        emoji: '💳',
+        tipLow: 'Prioritize high-interest debt first',
+        tipDefault: 'Keep EMIs under control and avoid revolving credit',
+      }
+    case 'taxEfficiency':
+      return {
+        title: 'Tax Efficiency',
+        emoji: '💰',
+        tipLow: 'Explore 80C deductions to save up to ₹46,800/year',
+        tipDefault: 'Use deductions and exemptions strategically',
+      }
+    case 'retirement':
+      return {
+        title: 'Retirement',
+        emoji: '🏖️',
+        tipLow: 'Start NPS or PPF contributions today',
+        tipDefault: 'Increase long-term contributions with raises',
+      }
+  }
 }
 
 export default function DashboardPage() {
+  const navigate = useNavigate()
   const [searchParams] = useSearchParams()
-  const [sessionId] = useState<string>(() => searchParams.get('sessionId') ?? crypto.randomUUID())
-  const [profile, setProfile] = useState<UserProfile>(emptyProfile)
+  const [sessionId] = useState<string>(() => {
+    const fromUrl = searchParams.get('sessionId')
+    const stored = window.localStorage.getItem('finpath_session_id')
+    const picked = (fromUrl && fromUrl.trim().length > 0 ? fromUrl : null) ?? (stored && stored.trim().length > 0 ? stored : null)
+    return picked ?? crypto.randomUUID()
+  })
+  const [profile, setProfile] = useState<UserProfile | null>(null)
   const [score, setScore] = useState<FinancialScore | null>(null)
   const [recs, setRecs] = useState<ETRecommendation[]>([])
   const [isLoading, setIsLoading] = useState<boolean>(true)
   const [error, setError] = useState<string | null>(null)
 
-  const goalsText = useMemo(() => profile.goals.join(', '), [profile.goals])
-  const investmentsText = useMemo(() => profile.investments.join(', '), [profile.investments])
-  const insuranceText = useMemo(() => profile.insurance.join(', '), [profile.insurance])
+  const [animatedOverall, setAnimatedOverall] = useState<number>(0)
+  const [animatedDims, setAnimatedDims] = useState<Record<DimensionKey, number>>({
+    emergency: 0,
+    insurance: 0,
+    investments: 0,
+    debt: 0,
+    taxEfficiency: 0,
+    retirement: 0,
+  })
+
+  useEffect(() => {
+    window.localStorage.setItem('finpath_session_id', sessionId)
+  }, [sessionId])
 
   useEffect(() => {
     let cancelled = false
@@ -84,9 +111,9 @@ export default function DashboardPage() {
       try {
         const s = await getSession(sessionId)
         if (cancelled) return
-        if (s.profile) setProfile(s.profile)
-        if (s.score) setScore(s.score)
-        if (s.recommendations) setRecs(s.recommendations)
+        setProfile(s.profile ?? null)
+        setScore(s.score ?? null)
+        setRecs(s.recommendations ?? [])
       } catch (err) {
         if (cancelled) return
         const message =
@@ -94,35 +121,6 @@ export default function DashboardPage() {
             ? err.message
             : 'Failed to load dashboard. Start the server and set VITE_API_URL.'
         setError(message)
-        setScore({
-          overall: 62,
-          emergency: 48,
-          insurance: 75,
-          investments: 66,
-          debt: 60,
-          taxEfficiency: 55,
-          retirement: 55,
-        })
-        setRecs([
-          {
-            product: 'ET Money: Term Insurance Guide',
-            reason: 'Review coverage basics and choose a plan aligned to your needs.',
-            link: 'https://economictimes.indiatimes.com/wealth',
-            priority: 'high',
-          },
-          {
-            product: 'ET Markets: SIP Basics',
-            reason: 'Build an investing habit with SIP insights and market explainers.',
-            link: 'https://economictimes.indiatimes.com/markets',
-            priority: 'medium',
-          },
-          {
-            product: 'ET Prime: Tax Planning',
-            reason: 'Learn strategies to improve tax efficiency over the financial year.',
-            link: 'https://economictimes.indiatimes.com/prime',
-            priority: 'low',
-          },
-        ])
       } finally {
         if (!cancelled) setIsLoading(false)
       }
@@ -134,176 +132,197 @@ export default function DashboardPage() {
     }
   }, [sessionId])
 
-  async function handleSaveAndRefresh() {
-    setIsLoading(true)
-    setError(null)
+  useEffect(() => {
+    if (!score) return
 
-    try {
-      const result = await generateScore(profile, sessionId)
-      setScore(result.score)
-      setRecs(result.recommendations)
-    } catch (err) {
-      const message =
-        err instanceof Error ? err.message : 'Failed to refresh dashboard. Please try again.'
-      setError(message)
-    } finally {
-      setIsLoading(false)
+    setAnimatedOverall(0)
+    setAnimatedDims({
+      emergency: 0,
+      insurance: 0,
+      investments: 0,
+      debt: 0,
+      taxEfficiency: 0,
+      retirement: 0,
+    })
+
+    const interval = window.setInterval(() => {
+      setAnimatedOverall((prev) => (prev >= score.overall ? score.overall : prev + 1))
+      setAnimatedDims((prev) => ({
+        emergency: prev.emergency >= score.emergency ? score.emergency : prev.emergency + 1,
+        insurance: prev.insurance >= score.insurance ? score.insurance : prev.insurance + 1,
+        investments: prev.investments >= score.investments ? score.investments : prev.investments + 1,
+        debt: prev.debt >= score.debt ? score.debt : prev.debt + 1,
+        taxEfficiency: prev.taxEfficiency >= score.taxEfficiency ? score.taxEfficiency : prev.taxEfficiency + 1,
+        retirement: prev.retirement >= score.retirement ? score.retirement : prev.retirement + 1,
+      }))
+    }, 12)
+
+    return () => {
+      window.clearInterval(interval)
     }
-  }
+  }, [score])
+
+  const nextSteps = useMemo(() => {
+    if (!score) return []
+    const dims: Array<{ key: DimensionKey; value: number; title: string; emoji: string; tip: string }> = (
+      Object.keys(animatedDims) as DimensionKey[]
+    ).map((key) => {
+      const meta = dimensionMeta(key)
+      const value = score[key]
+      const tip = value < 50 ? meta.tipLow : meta.tipDefault
+      return { key, value, title: meta.title, emoji: meta.emoji, tip }
+    })
+    return [...dims].sort((a, b) => a.value - b.value).slice(0, 3)
+  }, [animatedDims, score])
+
+  const name = profile?.name?.trim() || 'there'
+  const overall = score?.overall ?? 0
+  const overallColors = colorClasses(overall)
+
+  const ringSize = 164
+  const ringStroke = 14
+  const ringRadius = (ringSize - ringStroke) / 2
+  const ringCircumference = 2 * Math.PI * ringRadius
+  const ringOffset = ringCircumference - (animatedOverall / 100) * ringCircumference
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
-        <div>
-          <div className="text-lg font-semibold text-white">Dashboard</div>
-          <div className="text-xs text-slate-400">
-            Financial health score and ET recommendations.
-          </div>
-        </div>
-        <button
-          type="button"
-          onClick={() => void handleSaveAndRefresh()}
-          className={[
-            'inline-flex h-11 items-center justify-center rounded-xl px-4 text-sm font-semibold transition',
-            isLoading ? 'cursor-not-allowed bg-white/10 text-slate-500' : 'bg-etOrange text-black',
-          ].join(' ')}
-          disabled={isLoading}
-        >
-          Update Score
-        </button>
-      </div>
-
-      {error ? <div className="rounded-xl bg-red-500/10 p-3 text-xs text-red-200">{error}</div> : null}
-
-      <div className="grid gap-6 lg:grid-cols-3">
-        <div className="lg:col-span-2">
-          {score ? <ScoreCard score={score} /> : <div className="text-sm text-slate-400">Loading…</div>}
-        </div>
-        <div className="rounded-2xl bg-white/5 p-5 ring-1 ring-white/10">
-          <div className="text-sm font-semibold text-white">Profile</div>
-          <div className="mt-1 text-xs text-slate-400">
-            Stored via /api/profile. Replace with proper auth + user storage.
-          </div>
-
-          <div className="mt-4 space-y-3">
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="text-xs font-medium text-slate-300">Name</label>
-                <input
-                  value={profile.name}
-                  onChange={(e) => setProfile((p) => ({ ...p, name: e.target.value }))}
-                  className="mt-2 w-full rounded-xl bg-black/40 px-3 py-2 text-sm text-white ring-1 ring-white/10 outline-none focus:ring-etOrange/50"
-                />
-              </div>
-              <div>
-                <label className="text-xs font-medium text-slate-300">Age</label>
-                <input
-                  value={profile.age}
-                  type="number"
-                  min={0}
-                  onChange={(e) => setProfile((p) => ({ ...p, age: Number(e.target.value) }))}
-                  className="mt-2 w-full rounded-xl bg-black/40 px-3 py-2 text-sm text-white ring-1 ring-white/10 outline-none focus:ring-etOrange/50"
-                />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="text-xs font-medium text-slate-300">Monthly Income</label>
-                <input
-                  value={profile.income}
-                  type="number"
-                  min={0}
-                  onChange={(e) => setProfile((p) => ({ ...p, income: Number(e.target.value) }))}
-                  className="mt-2 w-full rounded-xl bg-black/40 px-3 py-2 text-sm text-white ring-1 ring-white/10 outline-none focus:ring-etOrange/50"
-                />
-              </div>
-              <div>
-                <label className="text-xs font-medium text-slate-300">Monthly Expenses</label>
-                <input
-                  value={profile.expenses}
-                  type="number"
-                  min={0}
-                  onChange={(e) => setProfile((p) => ({ ...p, expenses: Number(e.target.value) }))}
-                  className="mt-2 w-full rounded-xl bg-black/40 px-3 py-2 text-sm text-white ring-1 ring-white/10 outline-none focus:ring-etOrange/50"
-                />
-              </div>
-            </div>
-
-            <div>
-              <label className="text-xs font-medium text-slate-300">Risk Appetite</label>
-              <select
-                value={profile.riskAppetite}
-                onChange={(e) =>
-                  setProfile((p) => ({
-                    ...p,
-                    riskAppetite: e.target.value as UserProfile['riskAppetite'],
-                  }))
-                }
-                className="mt-2 w-full rounded-xl bg-black/40 px-3 py-2 text-sm text-white ring-1 ring-white/10 outline-none focus:ring-etOrange/50"
-              >
-                <option value="conservative">Conservative</option>
-                <option value="moderate">Moderate</option>
-                <option value="aggressive">Aggressive</option>
-              </select>
-            </div>
-
-            <div className="grid grid-cols-1 gap-3">
-              <div>
-                <label className="text-xs font-medium text-slate-300">Goals (comma-separated)</label>
-                <input
-                  value={goalsText}
-                  onChange={(e) => setProfile((p) => ({ ...p, goals: parseGoals(e.target.value) }))}
-                  className="mt-2 w-full rounded-xl bg-black/40 px-3 py-2 text-sm text-white ring-1 ring-white/10 outline-none focus:ring-etOrange/50"
-                />
-              </div>
-              <div>
-                <label className="text-xs font-medium text-slate-300">
-                  Investments (comma-separated)
-                </label>
-                <input
-                  value={investmentsText}
-                  onChange={(e) => setProfile((p) => ({ ...p, investments: parseInvestments(e.target.value) }))}
-                  className="mt-2 w-full rounded-xl bg-black/40 px-3 py-2 text-sm text-white ring-1 ring-white/10 outline-none focus:ring-etOrange/50"
-                />
-              </div>
-              <div>
-                <label className="text-xs font-medium text-slate-300">
-                  Insurance (comma-separated)
-                </label>
-                <input
-                  value={insuranceText}
-                  onChange={(e) =>
-                    setProfile((p) => ({ ...p, insurance: parseCsv(e.target.value) }))
-                  }
-                  className="mt-2 w-full rounded-xl bg-black/40 px-3 py-2 text-sm text-white ring-1 ring-white/10 outline-none focus:ring-etOrange/50"
-                />
-              </div>
-            </div>
-
-            <label className="flex items-center gap-2 text-xs text-slate-300">
-              <input
-                type="checkbox"
-                checked={profile.hasEmergencyFund}
-                onChange={(e) => setProfile((p) => ({ ...p, hasEmergencyFund: e.target.checked }))}
-                className="size-4 rounded border-white/20 bg-black/40 text-etOrange focus:ring-etOrange"
-              />
-              I have an emergency fund
-            </label>
-          </div>
-        </div>
-      </div>
-
+    <div className="space-y-10">
       <div>
-        <div className="text-sm font-semibold text-white">ET Recommendations</div>
-        <div className="mt-1 text-xs text-slate-400">
-          Placeholder cards from /api/score. Links point to ET properties for now.
+        <div className="text-2xl font-semibold text-white">Welcome back, {name}!</div>
+        <div className="mt-2 text-sm text-[#888888]">Your personalized ET financial journey</div>
+      </div>
+
+      {error ? (
+        <div className="rounded-2xl border border-red-500/30 bg-red-500/10 p-4 text-sm text-red-200">
+          {error}
         </div>
-        <div className="mt-4 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+      ) : null}
+
+      <section className="grid gap-6 lg:grid-cols-3">
+        <div className="rounded-3xl border border-[#222222] bg-[#111111] p-6 lg:col-span-1">
+          <div className="text-sm font-semibold text-white">Your FinPath Score</div>
+          <div className="mt-1 text-sm text-[#888888]">{overallSubtitle(overall)}</div>
+
+          <div className="mt-6 flex items-center justify-center">
+            <div className="relative" style={{ width: ringSize, height: ringSize }}>
+              <svg width={ringSize} height={ringSize} className="block">
+                <circle
+                  cx={ringSize / 2}
+                  cy={ringSize / 2}
+                  r={ringRadius}
+                  fill="transparent"
+                  stroke="#222222"
+                  strokeWidth={ringStroke}
+                />
+                <circle
+                  cx={ringSize / 2}
+                  cy={ringSize / 2}
+                  r={ringRadius}
+                  fill="transparent"
+                  strokeWidth={ringStroke}
+                  strokeLinecap="round"
+                  className={overallColors.ring}
+                  strokeDasharray={ringCircumference}
+                  strokeDashoffset={ringOffset}
+                  transform={`rotate(-90 ${ringSize / 2} ${ringSize / 2})`}
+                />
+              </svg>
+              <div className="absolute inset-0 grid place-items-center">
+                <div className="text-center">
+                  <div className={['text-4xl font-bold tabular-nums', overallColors.text].join(' ')}>
+                    {animatedOverall}
+                  </div>
+                  <div className="mt-1 text-xs text-[#888888]">/ 100</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-6 text-xs text-[#888888]">
+            {isLoading ? 'Loading your score…' : score ? 'Score loaded from your session.' : 'Complete chat to generate your score.'}
+          </div>
+        </div>
+
+        <div className="lg:col-span-2">
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {(['emergency', 'insurance', 'investments', 'debt', 'taxEfficiency', 'retirement'] as DimensionKey[]).map(
+              (key) => {
+                const meta = dimensionMeta(key)
+                const value = score ? score[key] : 0
+                const animatedValue = animatedDims[key]
+                const c = colorClasses(value)
+                const tip = value < 50 ? meta.tipLow : meta.tipDefault
+
+                return (
+                  <div key={key} className="rounded-2xl border border-[#222222] bg-[#111111] p-5">
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <div className="text-xl">{meta.emoji}</div>
+                        <div className="mt-2 text-sm font-semibold text-white">{meta.title}</div>
+                      </div>
+                      <div className={['text-lg font-bold tabular-nums', c.text].join(' ')}>
+                        {score ? animatedValue : '—'}
+                      </div>
+                    </div>
+
+                    <div className="mt-4 h-2 w-full overflow-hidden rounded-full bg-[#222222]">
+                      <div
+                        className={['h-full transition-[width] duration-500', c.bar].join(' ')}
+                        style={{ width: `${Math.max(0, Math.min(100, animatedValue))}%` }}
+                      />
+                    </div>
+
+                    <div className="mt-3 text-sm text-[#888888]">{tip}</div>
+                  </div>
+                )
+              },
+            )}
+          </div>
+        </div>
+      </section>
+
+      <section className="space-y-4">
+        <div>
+          <div className="text-lg font-semibold text-white">Your Personalized ET Journey 🗺️</div>
+          <div className="mt-1 text-sm text-[#888888]">Curated recommendations based on your profile.</div>
+        </div>
+        <div className="grid gap-4 md:grid-cols-2">
           {recs.map((rec) => (
             <RecommendationCard key={`${rec.product}-${rec.priority}`} rec={rec} />
           ))}
         </div>
+      </section>
+
+      <section className="space-y-4">
+        <div className="text-lg font-semibold text-white">Your Next 3 Steps</div>
+        <div className="grid gap-4 md:grid-cols-3">
+          {nextSteps.map((s, idx) => (
+            <div key={s.key} className="rounded-2xl border border-[#222222] bg-[#111111] p-5">
+              <div className="flex items-start justify-between gap-3">
+                <div className="text-sm font-semibold text-white">
+                  {idx + 1}. {s.emoji} {s.title}
+                </div>
+                <div className="text-sm font-bold tabular-nums text-[#888888]">{s.value}</div>
+              </div>
+              <div className="mt-3 text-sm text-[#888888]">{s.tip}</div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <div className="flex items-center justify-between gap-3">
+        <div className="text-xs text-[#888888]">Session: {sessionId.slice(0, 8)}</div>
+        <button
+          type="button"
+          onClick={() => {
+            const newSessionId = crypto.randomUUID()
+            window.localStorage.setItem('finpath_session_id', newSessionId)
+            navigate(`/chat?sessionId=${encodeURIComponent(newSessionId)}`)
+          }}
+          className="inline-flex h-11 items-center justify-center rounded-xl bg-etOrange px-5 text-sm font-semibold text-black transition hover:brightness-110"
+        >
+          Retake Assessment
+        </button>
       </div>
     </div>
   )
