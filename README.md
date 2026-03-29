@@ -1,6 +1,11 @@
-# FinPath AI 🧭 
-### Your Personal ET Finance Concierge 
-**ET AI Hackathon 2026 | Problem Statement 7 — AI Concierge for ET** 
+# FinPath AI 🧭  
+## Your Personal ET Finance Concierge  
+**ET AI Hackathon 2026 | Problem Statement 7 — AI Concierge for ET**
+
+## 👨‍💻 Team Name: abhijayshah74
+- Abhijay Kumar Shah -Team leader +917879028316
+- Uttam Kumar +919109966274
+- Deepak Goutam +919811759060
 
 
 ### Demo Video Link : https://www.youtube.com/playlist?list=PLfXvNZFBCcFSLL0b2uJuGu0WYKCyhy04Y 
@@ -8,6 +13,7 @@
 ### Github link : https://github.com/Abhijayshah/finpath-ai 
 
 ### Live Website link : https://finpath-ai.vercel.app/ 
+
 
  
 <!-- ## ✅ Submission Requirements
@@ -120,8 +126,9 @@ Open http://localhost:5173
 | Cross-sell conversion | 3x baseline | 
 | Financial advisor cost saved | ₹25,000/year per user | 
  
-## 👨‍💻 Team 
-Abhijay Kumar Shah — B.Tech CS, VIT | Co-founder CatCatchCode 
-Email: abhijayshah74@gmail.com 
+## 👨‍💻 Team Name: abhijayshah74
+- Abhijay Kumar Shah -Team leader +917879028316
+- Uttam Kumar +919109966274
+- Deepak Goutam +919811759060
  
 *Built for ET AI Hackathon 2026* 
