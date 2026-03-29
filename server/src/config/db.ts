@@ -6,9 +6,7 @@ export async function connectToMongo(mongoUri: string): Promise<boolean> {
   if (!mongoUri) return false
 
   try {
-    await mongoose.connect(mongoUri, {
-      serverSelectionTimeoutMS: 3000,
-    })
+    await mongoose.connect(mongoUri)
     return true
   } catch {
     return false
